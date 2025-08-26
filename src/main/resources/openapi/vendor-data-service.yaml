@@ -1,0 +1,130 @@
+openapi: 3.0.3
+info:
+  title: Vendor Data Service API
+  version: 0.1.0
+  description: |
+    External-facing API to search vendor datasets by SSN last 4, DoB, and name.
+    Secured with JWT Bearer tokens (same issuer and claims model as vendor-auth-service).
+servers:
+  - url: https://api.example.com/vendor-data
+    description: Production
+  - url: http://localhost:8080
+    description: Local
+security:
+  - bearerAuth: []
+paths:
+  /api/v1/search:
+    get:
+      summary: Search records (simple query)
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: ssnLast4
+          schema:
+            type: string
+            pattern: "^[0-9]{4}$"
+          required: false
+        - in: query
+          name: dob
+          schema:
+            type: string
+            format: date
+          required: false
+        - in: query
+          name: firstName
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: middleName
+          schema:
+            type: string
+          required: false
+        - in: query
+          name: lastName
+          schema:
+            type: string
+          required: false
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResponse'
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+    post:
+      summary: Search records (complex payload)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SearchResponse'
+        '400': { description: Bad Request }
+        '401': { description: Unauthorized }
+        '403': { description: Forbidden }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    SearchRequest:
+      type: object
+      properties:
+        ssnLast4:
+          type: string
+          pattern: "^[0-9]{4}$"
+        dob:
+          type: string
+          format: date
+        firstName:
+          type: string
+        middleName:
+          type: string
+        lastName:
+          type: string
+    CaseRecord:
+      type: object
+      properties:
+        county: { type: string }
+        state: { type: string }
+        caseNumber: { type: string }
+        charge: { type: string }
+        chargeType: { type: string }
+        dispositionType: { type: string }
+        dispositionDate: { type: string, format: date }
+        fileDate: { type: string, format: date }
+        offenseDate: { type: string, format: date }
+    SearchResponse:
+      type: object
+      properties:
+        firstName: { type: string }
+        middleName: { type: string }
+        lastName: { type: string }
+        suffix: { type: string }
+        dob: { type: string, format: date }
+        sex: { type: string }
+        race: { type: string }
+        driverLicense: { type: string, description: 'DL State and Number combined' }
+        matchScore: { type: number, format: double }
+        cases:
+          type: array
+          items: { $ref: '#/components/schemas/CaseRecord' }

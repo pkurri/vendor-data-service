@@ -1,0 +1,66 @@
+name: build-and-deploy-azure-gov
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: vendor-data-service-azure-gov
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    env:
+      JAVA_VERSION: '17'
+      APP_NAME: '<your-app-service-name>'   # e.g., vendor-data-api-gov
+      PACKAGE_PATH: 'build/libs/app.jar'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Build JAR
+        run: ./gradlew --no-daemon clean bootJar
+
+      # Option A: Login to Azure Government with a Service Principal (OIDC or client secret)
+      # Use environment: azureUSGovernment
+      - name: Azure Gov login
+        if: ${{ secrets.AZURE_CREDENTIALS_GOV != '' }}
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS_GOV }}
+          environment: azureUSGovernment
+
+      # Option B (simplest): Use App Service publish profile secret; no explicit login required.
+      - name: Deploy to Azure Web App (Gov)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.APP_NAME }}
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_GOV }}
+          package: ${{ env.PACKAGE_PATH }}
+
+      # Example: Swap slot after deploying to staging (uncomment if using slots)
+      # - name: Swap slots (staging -> production)
+      #   if: ${{ env.DEPLOY_SLOT == 'staging' }}
+      #   uses: azure/CLI@v2
+      #   with:
+      #     azcliversion: 2.60.0
+      #     inlineScript: |
+      #       az webapp deployment slot swap \
+      #         --resource-group <rg-name> \
+      #         --name ${{ env.APP_NAME }} \
+      #         --slot staging \
+      #         --target-slot production

@@ -1,0 +1,15 @@
+# Gradle
+.gradle/
+build/
+!build/libs/app.jar
+
+# IDEs
+.idea/
+*.iml
+.vscode/
+
+# Others
+Dockerfile
+.git/
+.gitignore
+.env

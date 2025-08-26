@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vendor-data-service
+  labels:
+    app: vendor-data-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vendor-data-service
+  template:
+    metadata:
+      labels:
+        app: vendor-data-service
+    spec:
+      containers:
+        - name: app
+          image: youracr.azurecr.us/vendor-data-service:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          env:
+            - name: SERVER_PORT
+              value: "8080"
+            - name: JWT_ISSUER_URI
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-auth-config
+                  key: issuerUri
+            - name: JWT_JWK_SET_URI
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-auth-config
+                  key: jwkSetUri
+            - name: CORS_ALLOWED_ORIGINS
+              value: "*"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-db
+                  key: url
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-db
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vendor-db
+                  key: password
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 20
