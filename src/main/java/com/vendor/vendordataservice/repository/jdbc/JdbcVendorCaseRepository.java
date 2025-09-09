@@ -23,7 +23,7 @@ public class JdbcVendorCaseRepository implements VendorCaseRepository {
     }
 
     @Override
-    public List<VendorCaseRow> search(String ssnLast4, LocalDate dob, String firstName, String middleName, String lastName) {
+    public List<VendorCaseRow> search(String ssnLast4, LocalDate dob, String firstName, String middleName, String lastName, int offset, int limit) {
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT ")
            .append(" first_name, middle_name, last_name, suffix, dob, sex, race, dl_state, dl_number, ")
@@ -31,6 +31,22 @@ public class JdbcVendorCaseRepository implements VendorCaseRepository {
            .append(" FROM vendor_cases WHERE 1=1 ");
 
         MapSqlParameterSource params = new MapSqlParameterSource();
+
+        // Scope: Florida-only
+        sql.append(" AND state = 'FL' ");
+
+        // Scope: cases filed on or after 2015-01-01
+        sql.append(" AND (file_date IS NULL OR file_date >= '2015-01-01') ");
+
+        // Privacy & Security (temporary column names; will be adjusted when finalized)
+        // Only public cases: secur_flg NULL or 'A'
+        sql.append(" AND (secur_flg IS NULL OR secur_flg = 'A') ");
+        // Only public docket items: docket_secur_flg NULL or 'P'
+        sql.append(" AND (docket_secur_flg IS NULL OR docket_secur_flg = 'P') ");
+        // Exclude juvenile privacy
+        sql.append(" AND (privacy_cd IS NULL OR privacy_cd <> 'J') ");
+        // Case types limited to CF/MM/CT
+        sql.append(" AND (ucn_court_type IN ('CF','MM','CT')) ");
 
         if (ssnLast4 != null && !ssnLast4.isBlank()) {
             sql.append(" AND ssn_last4 = :ssnLast4 ");
@@ -53,8 +69,13 @@ public class JdbcVendorCaseRepository implements VendorCaseRepository {
             params.addValue("lastName", lastName + "%");
         }
 
-        // Optional: sensible limit to avoid unbounded scans
-        sql.append(" ORDER BY last_name, first_name, dob, case_number ");
+        // Sort by most recent filing date, then stable person fields
+        sql.append(" ORDER BY file_date DESC, last_name, first_name, dob, case_number ");
+
+        // SQL Server style pagination
+        sql.append(" OFFSET :offset ROWS FETCH NEXT :limit ROWS ONLY ");
+        params.addValue("offset", Math.max(0, offset));
+        params.addValue("limit", Math.max(1, limit));
 
         List<VendorCaseRow> rows = jdbc.query(sql.toString(), params, new VendorCaseRowMapper());
         return rows != null ? rows : new ArrayList<>();

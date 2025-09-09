@@ -3,6 +3,7 @@ package com.vendor.vendordataservice.service.impl;
 import com.vendor.vendordataservice.api.dto.CaseRecord;
 import com.vendor.vendordataservice.api.dto.SearchRequest;
 import com.vendor.vendordataservice.api.dto.SearchResponse;
+import com.vendor.vendordataservice.api.error.ApiBadRequestException;
 import com.vendor.vendordataservice.service.SearchService;
 import com.vendor.vendordataservice.repository.VendorCaseRepository;
 import com.vendor.vendordataservice.repository.model.VendorCaseRow;
@@ -24,13 +25,21 @@ public class DefaultSearchService implements SearchService {
 
     @Override
     public List<SearchResponse> search(SearchRequest request) {
+        validateRequest(request);
+
+        int page = request.getPage() != null ? request.getPage() : 1;
+        int pageSize = request.getPageSize() != null ? request.getPageSize() : 50;
+        int offset = (page - 1) * pageSize;
+
         // Query SQL Server for candidate rows
         List<VendorCaseRow> rows = repository.search(
                 request.getSsnLast4(),
                 request.getDob(),
                 request.getFirstName(),
                 request.getMiddleName(),
-                request.getLastName()
+                request.getLastName(),
+                offset,
+                pageSize
         );
 
         // Group rows by person identity (name + dob + DL)
@@ -79,7 +88,16 @@ public class DefaultSearchService implements SearchService {
             r.setMatchScore(scoringStrategy.score(r, request));
         }
 
-        return new ArrayList<>(byPerson.values());
+        List<SearchResponse> results = new ArrayList<>(byPerson.values());
+        results.sort((a, b) -> {
+            LocalDate aMax = a.getCases().stream().map(CaseRecord::getFileDate).filter(d -> d != null).max(LocalDate::compareTo).orElse(null);
+            LocalDate bMax = b.getCases().stream().map(CaseRecord::getFileDate).filter(d -> d != null).max(LocalDate::compareTo).orElse(null);
+            if (aMax == null && bMax == null) return 0;
+            if (aMax == null) return 1;
+            if (bMax == null) return -1;
+            return bMax.compareTo(aMax);
+        });
+        return results;
     }
 
     private static String nullSafeUpper(String s) { return s == null ? "" : s.toUpperCase(); }
@@ -90,4 +108,19 @@ public class DefaultSearchService implements SearchService {
         return null;
     }
     private static boolean notBlank(String s) { return s != null && !s.isBlank(); }
+
+    private void validateRequest(SearchRequest req) {
+        boolean hasName = notBlank(req.getFirstName()) || notBlank(req.getMiddleName()) || notBlank(req.getLastName());
+        boolean hasDob = req.getDob() != null;
+        boolean hasSsn = notBlank(req.getSsnLast4());
+        if (!(hasName || hasDob || hasSsn)) {
+            throw new ApiBadRequestException("MISSING_SEARCH_KEY", "Provide at least one search key");
+        }
+        if (req.getPage() != null && req.getPage() < 1) {
+            throw new ApiBadRequestException("INVALID_PAGINATION", "page must be >= 1");
+        }
+        if (req.getPageSize() != null && (req.getPageSize() < 1 || req.getPageSize() > 50)) {
+            throw new ApiBadRequestException("INVALID_PAGINATION", "pageSize must be between 1 and 50");
+        }
+    }
 }

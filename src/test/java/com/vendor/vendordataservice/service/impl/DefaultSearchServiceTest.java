@@ -16,7 +16,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +71,8 @@ class DefaultSearchServiceTest {
         row2.setChargeType("Traffic");
         row2.setDispositionType("Open");
 
-        when(repository.search(any(), any(), any(), any(), any())).thenReturn(List.of(row1, row2));
+        when(repository.search(any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(row1, row2));
 
         SearchRequest req = new SearchRequest();
         req.setFirstName("John");
@@ -87,5 +90,57 @@ class DefaultSearchServiceTest {
         assertThat(person.getFirstName()).isEqualTo("John");
         assertThat(person.getCases()).extracting(CaseRecord::getCaseNumber).containsExactlyInAnyOrder("C1", "C2");
         assertThat(person.getMatchScore()).isEqualTo(88.0);
+    }
+
+    @Test
+    void sortsPeopleByMostRecentFileDateDesc() {
+        // Person A (older)
+        VendorCaseRow a1 = new VendorCaseRow();
+        a1.setFirstName("Alice");
+        a1.setLastName("Alpha");
+        a1.setDob(LocalDate.of(1990, 1, 1));
+        a1.setFileDate(LocalDate.of(2016, 1, 1));
+
+        // Person B (newer)
+        VendorCaseRow b1 = new VendorCaseRow();
+        b1.setFirstName("Bob");
+        b1.setLastName("Beta");
+        b1.setDob(LocalDate.of(1991, 1, 1));
+        b1.setFileDate(LocalDate.of(2020, 5, 1));
+
+        when(repository.search(any(), any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(List.of(a1, b1));
+
+        SearchRequest req = new SearchRequest();
+        req.setLastName("*"); // ensures not missing-search-key due to notBlank check
+
+        when(scoringStrategy.score(any(SearchResponse.class), eq(req))).thenReturn(50.0);
+
+        List<SearchResponse> results = service.search(req);
+        assertThat(results).hasSize(2);
+        assertThat(results.get(0).getFirstName()).isEqualTo("Bob"); // newer first
+        assertThat(results.get(1).getFirstName()).isEqualTo("Alice");
+    }
+
+    @Test
+    void validateMissingSearchKeyThrows() {
+        SearchRequest req = new SearchRequest();
+        assertThrows(RuntimeException.class, () -> service.search(req));
+    }
+
+    @Test
+    void validateInvalidPaginationThrows() {
+        SearchRequest req = new SearchRequest();
+        req.setFirstName("John");
+        req.setPage(0); // invalid
+        assertThrows(RuntimeException.class, () -> service.search(req));
+    }
+
+    @Test
+    void validatePageSizeTooLargeThrows() {
+        SearchRequest req = new SearchRequest();
+        req.setFirstName("John");
+        req.setPageSize(100); // invalid > 50
+        assertThrows(RuntimeException.class, () -> service.search(req));
     }
 }

@@ -10,5 +10,7 @@ public interface VendorCaseRepository {
                                LocalDate dob,
                                String firstName,
                                String middleName,
-                               String lastName);
+                               String lastName,
+                               int offset,
+                               int limit);
 }
