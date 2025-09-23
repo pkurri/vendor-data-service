@@ -1,17 +1,21 @@
-# Vendor-Facing API Error Codes (Final Canonical List)
-
-| HTTP Status | Error Code              | Title / Description               | Typical Cause / When to Use              | Client Remediation                          |
-|-------------|------------------------|---------------------------------|-----------------------------------------|--------------------------------------------|
-| 400         | INVALID_REQUEST        | Malformed or invalid request     | Missing or invalid parameters           | Check request payload and parameters        |
-| 401         | UNAUTHORIZED           | Missing or invalid credentials   | Auth token missing, expired, or invalid | Provide valid authentication token          |
-| 403         | FORBIDDEN              | Not authorized to perform action | Access denied due to insufficient rights| Request necessary permissions                |
-| 404         | NOT_FOUND              | Resource or endpoint not found   | Requested resource does not exist       | Verify resource identifier or endpoint URL  |
-| 409         | CONFLICT               | Resource or ID conflict          | Duplicate request ID or conflicting data| Use unique request IDs or resolve conflicts |
-| 413         | PAYLOAD_TOO_LARGE      | Request body exceeds size limit  | Payload size exceeds max configured limit| Reduce payload size                          |
-| 415         | UNSUPPORTED_MEDIA_TYPE | Unsupported content type         | Content-Type header not application/json| Use Content-Type: application/json header   |
-| 422         | UNPROCESSABLE_ENTITY   | Validation or business rule failed| Semantic or field validation errors     | Fix validation errors as detailed in response|
-| 429         | RATE_LIMIT_EXCEEDED    | Too many requests                | Client exceeded allowed request quota   | Back off and retry after specified wait time|
-| 500         | INTERNAL_SERVER_ERROR  | Server-side unexpected error     | Unhandled exception or failure          | Retry later or contact support               |
-| 502         | UPSTREAM_ERROR         | Dependency server error          | Upstream service failure                 | Retry with backoff and monitor upstream     |
-| 503         | SERVICE_UNAVAILABLE    | Temporary service downtime       | Maintenance or temporary failure         | Retry after some time                        |
-| 504         | GATEWAY_TIMEOUT        | Gateway timeout                  | Upstream service timeout                  | Retry after delay                            |
+| HTTP | Code                | Title / Description           | When it Happens                                         | Message                             | Client Remediation                  | Notes / Reason for Removal      |
+|-------|---------------------|------------------------------|--------------------------------------------------------|-----------------------------------|-----------------------------------|-------------------------------|
+| 400   | ~~MISSING_SEARCH_KEY~~   | ~~Missing search key~~            | ~~No search keys supplied~~                                 | ~~Provide at least one search key~~    | ~~Add valid search keys~~              | ~~Merged into INVALID_REQUEST: simplifies param validation~~  |
+| 400   | ~~UCN_NOT_ALLOWED~~      | ~~UCN Search Restriction~~        | ~~UCN used as a search parameter~~                          | ~~UCN cannot be used as search key~~   | ~~Remove UCN param~~                  | ~~Covered by INVALID_REQUEST param checks~~   |
+| 400   | ~~MISSING_REQUEST_ID~~   | ~~Request ID required~~           | ~~Absent or empty request_id~~                              | ~~Request ID required~~                | ~~Send unique request ID~~            | ~~Covered by 409 CONFLICT for duplicates~~ |
+| 400   | ~~INVALID_DATE_FORMAT~~  | ~~Bad date format~~               | ~~Malformed ISO date~~                                      | ~~Invalid date format~~                | ~~Use yyyy-MM-dd format~~             | ~~Merged with INVALID_REQUEST for param validation~~         |
+| 400   | ~~INVALID_YEAR_OF_BIRTH~~| ~~Bad year~~                     | ~~Year of birth invalid~~                                   | ~~Year must be 4-digit allowed year~~ | ~~Provide valid year~~                | ~~Merged with INVALID_REQUEST~~       |
+| 400   | ~~INVALID_SSN~~          | ~~Bad SSN~~                      | ~~SSN not 4 digits~~                                       | ~~SSN must be numeric~~                | ~~Provide valid SSN~~                 | ~~Merged with INVALID_REQUEST~~       |
+| 400   | INVALID_PAGINATES    | Bad paging params            | page_size > 200, or invalid next_page_token            | Invalid pagination params          | Adjust pagination parameters     | Retain                      |
+| 401   | ~~MISSING_AUTH_HEADER~~  | ~~Missing auth token~~           | ~~No or invalid JWT auth token~~                            | ~~Missing/invalid token~~              | ~~Provide valid token~~              | ~~Merged into INVALID_TOKEN for auth simplification~~        |
+| 401   | ~~INVALID_TOKEN~~        | ~~Invalid JWT token~~            | ~~Token invalid, expired or missing claims~~                | ~~Invalid or expired token~~           | ~~Get new valid token~~              | ~~Merged into INVALID_TOKEN~~  |
+| 404   | NOT_FOUND            | Resource not found           | Path or resource not found                              | Requested resource not found       | Verify URL/request                | Retain                      |
+| 409   | DUPLICATE_REQUEST_ID | Duplicate request_id         | request_id reused within TTL                            | Request_id must be unique           | Generate new unique request_id   | Retain                      |
+| 413   | PAYLOAD_TOO_LARGE    | Request body too large       | Payload exceeds configured limits                       | Payload too large                  | Reduce payload size              | Retain                      |
+| 415   | UNSUPPORTED_MEDIA_TYPE | Wrong content-type          | Content-Type not application/json                       | Unsupported media type             | Use application/json content type | Retain                      |
+| 422   | UNPROCESSABLE_ENTITY | Semantic validation failed   | Business rule or field validation failed                 | Validation failed for one or more fields | Fix error details             | Retain                      |
+| 429   | RATE_LIMIT_EXCEEDED  | Rate limit exceeded          | Too many requests exceeded quota                        | Rate limit exceeded                | Back off and retry               | Retain                      |
+| 500   | INTERNAL_ERROR       | Server error                 | Unhandled exception on server                           | Internal server error             | Retry later or contact support   | Retain                      |
+| 502   | BAD_GATEWAY          | Upstream error              | Dependency or upstream service failure                  | Bad gateway from upstream service | Retry with exponential backoff  | Retain                      |
+| 503   | SERVICE_UNAVAILABLE  | Maintenance / downtime       | Service temporarily unavailable                         | Service temporarily unavailable    | Retry after delay                | Retain                      |
+| 504   | GATEWAY_TIMEOUT      | Gateway timeout              | Timeout waiting on upstream                              | Gateway timeout                   | Retry after delay                | Retain                      |
