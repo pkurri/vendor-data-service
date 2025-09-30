@@ -1,0 +1,387 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Court Case Data",
+  "type": "object",
+  "properties": {
+    "county_id": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 67
+    },
+    "ucn": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "last_name": {
+      "type": "string",
+      "maxLength": 30
+    },
+    "first_name": {
+      "type": "string",
+      "maxLength": 20
+    },
+    "middle_name": {
+      "type": ["string", "null"],
+      "maxLength": 20
+    },
+    "suffix_code": {
+      "type": ["string", "null"],
+      "maxLength": 1
+    },
+    "name_type_code": {
+      "type": ["string", "null"],
+      "maxLength": 1
+    },
+    "date_of_birth": {
+      "type": "string",
+      "format": "date"
+    },
+    "sex_code": {
+      "type": ["string", "null"],
+      "maxLength": 1
+    },
+    "race_code": {
+      "type": ["string", "null"],
+      "maxLength": 1
+    },
+    "place_of_birth": {
+      "type": ["string", "null"],
+      "maxLength": 60
+    },
+    "date_of_death": {
+      "type": ["string", "null"],
+      "format": "date"
+    },
+    "country": {
+      "type": ["string", "null"],
+      "maxLength": 2
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "clerk_case_number": {
+            "type": "string",
+            "maxLength": 20
+          },
+          "clerk_file_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "case_type": {
+            "type": "string",
+            "maxLength": 40
+          },
+          "judge_code": {
+            "type": ["string", "null"],
+            "maxLength": 30
+          },
+          "outstanding_warrant": {
+            "type": "boolean"
+          },
+          "reopen_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "reopen_reason": {
+            "type": ["string", "null"],
+            "maxLength": 1
+          },
+          "last_docket_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "disposition_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "contested": {
+            "type": "boolean"
+          },
+          "jury_trial": {
+            "type": "boolean"
+          },
+          "judge_code_at_disposition": {
+            "type": ["string", "null"],
+            "maxLength": 30
+          },
+          "case_system_entry_date": {
+            "type": ["string", "null"],
+            "format": "date"
+          },
+          "case_status_code": {
+            "type": "integer"
+          },
+          "charges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "charge_sequence_number": {
+                  "type": "string",
+                  "maxLength": 15
+                },
+                "initial_filing_date": {
+                  "type": ["string", "null"],
+                  "format": "date"
+                },
+                "offense_date": {
+                  "type": ["string", "null"],
+                  "format": "date"
+                },
+                "initial_fl_statute_number": {
+                  "type": ["string", "null"],
+                  "maxLength": 14
+                },
+                "initial_fl_statute_description": {
+                  "type": ["string", "null"],
+                  "maxLength": 60
+                },
+                "prosecution_action_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "prosecutor_fl_statute_number": {
+                  "type": ["string", "null"],
+                  "maxLength": 14
+                },
+                "prosecutor_fl_statute_description": {
+                  "type": ["string", "null"],
+                  "maxLength": 60
+                },
+                "prosecutor_decision_date": {
+                  "type": ["string", "null"],
+                  "format": "date"
+                },
+                "court_fl_statute_number": {
+                  "type": ["string", "null"],
+                  "maxLength": 14
+                },
+                "court_fl_statute_description": {
+                  "type": ["string", "null"],
+                  "maxLength": 60
+                },
+                "court_decision_date": {
+                  "type": ["string", "null"],
+                  "format": "date"
+                },
+                "court_action_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "d6_date": {
+                  "type": ["string", "null"],
+                  "format": "date"
+                },
+                "trial_type_code": {
+                  "type": ["integer", "null"]
+                },
+                "traffic_disposition_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 6
+                },
+                "citation_issued_date": {
+                  "type": ["string", "null"],
+                  "format": "date"
+                },
+                "citation_number": {
+                  "type": ["string", "null"],
+                  "maxLength": 20
+                },
+                "defendant_final_plea_code": {
+                  "type": ["integer", "null"]
+                },
+                "initial_charge_level_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "initial_charge_degree_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "prosecutor_charge_level_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "prosecutor_charge_degree_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "prosecutor_charge_count": {
+                  "type": ["integer", "null"]
+                },
+                "court_charge_level_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "court_charge_degree_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 1
+                },
+                "sentences": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sentence_sequence_number": {
+                        "type": "string",
+                        "maxLength": 15
+                      },
+                      "sentence_status_code": {
+                        "type": ["integer", "null"]
+                      },
+                      "sentence_imposed_date": {
+                        "type": ["string", "null"],
+                        "format": "date"
+                      },
+                      "sentence_effective_date": {
+                        "type": ["string", "null"],
+                        "format": "date"
+                      },
+                      "sentence_code": {
+                        "type": ["integer", "null"]
+                      },
+                      "length_of_sentence_confinement": {
+                        "type": ["string", "null"],
+                        "maxLength": 1
+                      },
+                      "confinement_type_code": {
+                        "type": ["string", "null"],
+                        "maxLength": 1
+                      },
+                      "judge_code_at_sentence": {
+                        "type": ["string", "null"],
+                        "maxLength": 30
+                      },
+                      "division": {
+                        "type": ["string", "null"],
+                        "maxLength": 30
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "dockets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "docket_identifier": {
+                  "type": "string",
+                  "maxLength": 14
+                },
+                "docket_action_date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "docket_code": {
+                  "type": "string",
+                  "maxLength": 20
+                },
+                "standard_docket_code": {
+                  "type": ["integer", "null"]
+                },
+                "docket_text": {
+                  "type": ["string", "null"],
+                  "maxLength": 8000
+                }
+              }
+            }
+          },
+          "court_events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "court_appearance_date": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "judge_code": {
+                  "type": ["string", "null"],
+                  "maxLength": 30
+                },
+                "court_event_description": {
+                  "type": "string",
+                  "maxLength": 40
+                },
+                "standard_court_event_code": {
+                  "type": ["integer", "null"]
+                },
+                "court_appearance_time": {
+                  "type": ["string", "null"],
+                  "pattern": "^([0-1]\\d|2[0-3]):[0-5]\\d:[0-5]\\d$|^([0-5]\\d)$"
+                },
+                "court_location": {
+                  "type": ["string", "null"],
+                  "maxLength": 30
+                },
+                "court_room": {
+                  "type": ["string", "null"],
+                  "maxLength": 6
+                },
+                "prosecutor": {
+                  "type": ["string", "null"],
+                  "maxLength": 30
+                },
+                "defendant_attorney": {
+                  "type": ["string", "null"],
+                  "maxLength": 30
+                },
+                "division": {
+                  "type": ["string", "null"],
+                  "maxLength": 30
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "defendants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "party_id": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 50
+          },
+          "middle_name": {
+            "type": ["string", "null"],
+            "maxLength": 50
+          },
+          "dob": {
+            "type": "string",
+            "format": "date"
+          },
+          "sex": {
+            "type": ["string", "null"],
+            "maxLength": 1
+          },
+          "race": {
+            "type": ["string", "null"],
+            "maxLength": 4
+          },
+          "aka": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

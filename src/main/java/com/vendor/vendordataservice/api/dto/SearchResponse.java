@@ -1,27 +1,46 @@
 package com.vendor.vendordataservice.api.dto;
 
-import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+/**
+ * Complete API response envelope matching JSON schema
+ */
+@Data
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class SearchResponse {
-    // Demographics
-    private String firstName;
-    private String middleName;
-    private String lastName;
-    private String suffix;
-    private LocalDate dob;
-    private String sex;
-    private String race;
-    private String driverLicense; // DL State and Number combined
-
-    private Double matchScore; // 0-100
-
-    private List<CaseRecord> cases = new ArrayList<>();
+    
+    @JsonProperty("api_version")
+    private String apiVersion;
+    
+    @JsonProperty("client_request_id")
+    private String clientRequestId;
+    
+    @JsonProperty("generated_at")
+    private OffsetDateTime generatedAt;
+    
+    @JsonProperty("page")
+    private Integer page;
+    
+    @JsonProperty("page_size")
+    private Integer pageSize;
+    
+    @JsonProperty("total_records_is_estimate")
+    private Boolean totalRecordsIsEstimate;
+    
+    @JsonProperty("warnings")
+    private List<String> warnings;
+    
+    @JsonProperty("data")
+    @Builder.Default
+    private List<CaseRecord> data = new ArrayList<>();
 }

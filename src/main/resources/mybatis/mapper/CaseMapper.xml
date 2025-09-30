@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.vendor.vendordataservice.repository.mybatis.CaseMapper">
+
+    <!-- Result Map for CaseRecord -->
+    <resultMap id="CaseRecordMap" type="com.vendor.vendordataservice.api.dto.CaseRecord">
+        <id property="caseId" column="case_id"/>
+        <result property="caseNumber" column="case_number"/>
+        <result property="ucn" column="ucn"/>
+        <result property="countyId" column="county_id"/>
+        <result property="courtType" column="court_type"/>
+        <result property="severityCode" column="severity_code"/>
+        <result property="caseType" column="case_type"/>
+        <result property="caseStatusCode" column="case_status_code"/>
+        <result property="judgeCode" column="judge_code"/>
+        <result property="judgeCodeAtDisposition" column="judge_code_at_disposition"/>
+        <result property="outstandingWarrant" column="outstanding_warrant"/>
+        <result property="contested" column="contested"/>
+        <result property="juryTrial" column="jury_trial"/>
+        <result property="filedDate" column="filed_date"/>
+        <result property="clerkFileDate" column="clerk_file_date"/>
+        <result property="reopenDate" column="reopen_date"/>
+        <result property="lastDocketDate" column="last_docket_date"/>
+        <result property="dispositionDate" column="disposition_date"/>
+        <result property="caseSystemEntryDate" column="case_system_entry_date"/>
+        <result property="lastName" column="last_name"/>
+        <result property="firstName" column="first_name"/>
+        <result property="middleName" column="middle_name"/>
+        <result property="suffixCode" column="suffix_code"/>
+        <result property="nameTypeCode" column="name_type_code"/>
+        <result property="dateOfBirth" column="date_of_birth"/>
+        <result property="sexCode" column="sex_code"/>
+        <result property="raceCode" column="race_code"/>
+        <result property="placeOfBirth" column="place_of_birth"/>
+        <result property="dateOfDeath" column="date_of_death"/>
+        <result property="country" column="country"/>
+        <result property="ssn" column="ssn"/>
+        <result property="clerkCaseNumber" column="clerk_case_number"/>
+        <result property="reopenReason" column="reopen_reason"/>
+        
+        <!-- Nested collections -->
+        <collection property="charges" ofType="com.vendor.vendordataservice.api.dto.ChargeDto" 
+                    select="selectChargesByCaseId" column="case_id"/>
+        <collection property="dockets" ofType="com.vendor.vendordataservice.api.dto.DocketDto" 
+                    select="selectDocketsByCaseId" column="case_id"/>
+        <collection property="events" ofType="com.vendor.vendordataservice.api.dto.EventDto" 
+                    select="selectEventsByCaseId" column="case_id"/>
+        <collection property="defendants" ofType="com.vendor.vendordataservice.api.dto.DefendantDto" 
+                    select="selectDefendantsByCaseId" column="case_id"/>
+    </resultMap>
+
+    <!-- Result Map for Charges -->
+    <resultMap id="ChargeMap" type="com.vendor.vendordataservice.api.dto.ChargeDto">
+        <id property="chargeSequenceNumber" column="charge_sequence_number"/>
+        <result property="initialFilingDate" column="initial_filing_date"/>
+        <result property="offenseDate" column="offense_date"/>
+        <result property="initialFlStatuteNumber" column="initial_fl_statute_number"/>
+        <result property="initialFlStatuteDescription" column="initial_fl_statute_description"/>
+        <result property="prosecutionActionCode" column="prosecution_action_code"/>
+        <result property="prosecutorFlStatuteNumber" column="prosecutor_fl_statute_number"/>
+        <result property="prosecutorFlStatuteDescription" column="prosecutor_fl_statute_description"/>
+        <result property="prosecutorDecisionDate" column="prosecutor_decision_date"/>
+        <result property="courtFlStatuteNumber" column="court_fl_statute_number"/>
+        <result property="courtFlStatuteDescription" column="court_fl_statute_description"/>
+        <result property="courtDecisionDate" column="court_decision_date"/>
+        <result property="courtActionCode" column="court_action_code"/>
+        <result property="d6Date" column="d6_date"/>
+        <result property="trialTypeCode" column="trial_type_code"/>
+        <result property="trafficDispositionCode" column="traffic_disposition_code"/>
+        <result property="citationIssuedDate" column="citation_issued_date"/>
+        <result property="citationNumber" column="citation_number"/>
+        <result property="defendantFinalPleaCode" column="defendant_final_plea_code"/>
+        <result property="initialChargeLevelCode" column="initial_charge_level_code"/>
+        <result property="initialChargeDegreeCode" column="initial_charge_degree_code"/>
+        <result property="prosecutorChargeLevelCode" column="prosecutor_charge_level_code"/>
+        <result property="prosecutorChargeDegreeCode" column="prosecutor_charge_degree_code"/>
+        <result property="prosecutorChargeCount" column="prosecutor_charge_count"/>
+        <result property="courtChargeLevelCode" column="court_charge_level_code"/>
+        <result property="courtChargeDegreeCode" column="court_charge_degree_code"/>
+        
+        <collection property="sentences" ofType="com.vendor.vendordataservice.api.dto.SentenceDto" 
+                    select="selectSentencesByChargeId" column="charge_id"/>
+    </resultMap>
+
+    <!-- Search Cases Query -->
+    <select id="searchCases" resultMap="CaseRecordMap">
+        SELECT 
+            c.case_id,
+            c.case_number,
+            c.ucn,
+            c.county_id,
+            c.court_type,
+            c.severity_code,
+            c.case_type,
+            c.case_status_code,
+            c.judge_code,
+            c.judge_code_at_disposition,
+            c.outstanding_warrant,
+            c.contested,
+            c.jury_trial,
+            c.filed_date,
+            c.clerk_file_date,
+            c.reopen_date,
+            c.last_docket_date,
+            c.disposition_date,
+            c.case_system_entry_date,
+            c.last_name,
+            c.first_name,
+            c.middle_name,
+            c.suffix_code,
+            c.name_type_code,
+            c.date_of_birth,
+            c.sex_code,
+            c.race_code,
+            c.place_of_birth,
+            c.date_of_death,
+            c.country,
+            c.ssn,
+            c.clerk_case_number,
+            c.reopen_reason
+        FROM cases c
+        <where>
+            <if test="request.nameLast != null and request.nameLast != ''">
+                AND UPPER(c.last_name) LIKE UPPER(CONCAT('%', #{request.nameLast}, '%'))
+            </if>
+            <if test="request.nameFirst != null and request.nameFirst != ''">
+                AND UPPER(c.first_name) LIKE UPPER(CONCAT('%', #{request.nameFirst}, '%'))
+            </if>
+            <if test="request.dob != null">
+                AND c.date_of_birth = #{request.dob}
+            </if>
+            <if test="request.ssnLast4 != null and request.ssnLast4 != ''">
+                AND RIGHT(c.ssn, 4) = #{request.ssnLast4}
+            </if>
+            <if test="request.filedDateFrom != null">
+                AND c.filed_date &gt;= #{request.filedDateFrom}
+            </if>
+            <if test="request.filedDateTo != null">
+                AND c.filed_date &lt;= #{request.filedDateTo}
+            </if>
+            <if test="request.countyCodes != null and request.countyCodes.size() > 0">
+                AND c.county_id IN
+                <foreach item="countyId" collection="request.countyCodes" open="(" separator="," close=")">
+                    #{countyId}
+                </foreach>
+            </if>
+            <if test="request.caseType != null and request.caseType.size() > 0">
+                AND c.case_type IN
+                <foreach item="type" collection="request.caseType" open="(" separator="," close=")">
+                    #{type}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY c.filed_date DESC
+        OFFSET #{request.page} * #{request.pageSize} - #{request.pageSize} ROWS
+        FETCH NEXT #{request.pageSize} ROWS ONLY
+    </select>
+
+    <!-- Select Charges by Case ID -->
+    <select id="selectChargesByCaseId" resultMap="ChargeMap">
+        SELECT 
+            charge_id,
+            charge_sequence_number,
+            initial_filing_date,
+            offense_date,
+            initial_fl_statute_number,
+            initial_fl_statute_description,
+            prosecution_action_code,
+            prosecutor_fl_statute_number,
+            prosecutor_fl_statute_description,
+            prosecutor_decision_date,
+            court_fl_statute_number,
+            court_fl_statute_description,
+            court_decision_date,
+            court_action_code,
+            d6_date,
+            trial_type_code,
+            traffic_disposition_code,
+            citation_issued_date,
+            citation_number,
+            defendant_final_plea_code,
+            initial_charge_level_code,
+            initial_charge_degree_code,
+            prosecutor_charge_level_code,
+            prosecutor_charge_degree_code,
+            prosecutor_charge_count,
+            court_charge_level_code,
+            court_charge_degree_code
+        FROM charges
+        WHERE case_id = #{case_id}
+        ORDER BY charge_sequence_number
+    </select>
+
+    <!-- Select Sentences by Charge ID -->
+    <select id="selectSentencesByChargeId" resultType="com.vendor.vendordataservice.api.dto.SentenceDto">
+        SELECT 
+            sentence_sequence_number AS sentenceSequenceNumber,
+            sentence_status_code AS sentenceStatusCode,
+            sentence_imposed_date AS sentenceImposedDate,
+            sentence_effective_date AS sentenceEffectiveDate,
+            sentence_code AS sentenceCode,
+            length_of_sentence_confinement AS lengthOfSentenceConfinement,
+            confinement_type_code AS confinementTypeCode,
+            judge_code_at_sentence AS judgeCodeAtSentence,
+            division
+        FROM sentences
+        WHERE charge_id = #{charge_id}
+        ORDER BY sentence_sequence_number
+    </select>
+
+    <!-- Select Dockets by Case ID -->
+    <select id="selectDocketsByCaseId" resultType="com.vendor.vendordataservice.api.dto.DocketDto">
+        SELECT 
+            docket_id AS docketId,
+            docket_action_date AS docketActionDate,
+            docket_code AS docketCode,
+            standard_docket_code AS standardDocketCode,
+            docket_text AS docketText
+        FROM dockets
+        WHERE case_id = #{case_id}
+        ORDER BY docket_action_date DESC
+    </select>
+
+    <!-- Select Events by Case ID -->
+    <select id="selectEventsByCaseId" resultType="com.vendor.vendordataservice.api.dto.EventDto">
+        SELECT 
+            event_id AS eventId,
+            court_appearance_date AS courtAppearanceDate,
+            court_appearance_time AS courtAppearanceTime,
+            judge_code AS judgeCode,
+            court_event_description AS courtEventDescription,
+            standard_court_event_code AS standardCourtEventCode,
+            court_location AS courtLocation,
+            court_room AS courtRoom,
+            prosecutor,
+            defendant_attorney AS defendantAttorney,
+            division
+        FROM court_events
+        WHERE case_id = #{case_id}
+        ORDER BY court_appearance_date DESC
+    </select>
+
+    <!-- Select Defendants by Case ID -->
+    <select id="selectDefendantsByCaseId" resultType="com.vendor.vendordataservice.api.dto.DefendantDto">
+        SELECT 
+            d.party_id AS partyId,
+            d.last_name AS lastName,
+            d.first_name AS firstName,
+            d.middle_name AS middleName,
+            d.dob,
+            d.sex,
+            d.race
+        FROM defendants d
+        WHERE d.case_id = #{case_id}
+    </select>
+
+    <!-- Count Cases -->
+    <select id="countCases" resultType="int">
+        SELECT COUNT(*)
+        FROM cases c
+        <where>
+            <if test="request.nameLast != null and request.nameLast != ''">
+                AND UPPER(c.last_name) LIKE UPPER(CONCAT('%', #{request.nameLast}, '%'))
+            </if>
+            <if test="request.nameFirst != null and request.nameFirst != ''">
+                AND UPPER(c.first_name) LIKE UPPER(CONCAT('%', #{request.nameFirst}, '%'))
+            </if>
+            <if test="request.dob != null">
+                AND c.date_of_birth = #{request.dob}
+            </if>
+            <if test="request.ssnLast4 != null and request.ssnLast4 != ''">
+                AND RIGHT(c.ssn, 4) = #{request.ssnLast4}
+            </if>
+            <if test="request.filedDateFrom != null">
+                AND c.filed_date &gt;= #{request.filedDateFrom}
+            </if>
+            <if test="request.filedDateTo != null">
+                AND c.filed_date &lt;= #{request.filedDateTo}
+            </if>
+            <if test="request.countyCodes != null and request.countyCodes.size() > 0">
+                AND c.county_id IN
+                <foreach item="countyId" collection="request.countyCodes" open="(" separator="," close=")">
+                    #{countyId}
+                </foreach>
+            </if>
+            <if test="request.caseType != null and request.caseType.size() > 0">
+                AND c.case_type IN
+                <foreach item="type" collection="request.caseType" open="(" separator="," close=")">
+                    #{type}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

@@ -1,11 +1,10 @@
 package com.vendor.vendordataservice.service.impl;
 
 import com.vendor.vendordataservice.api.dto.CaseRecord;
+import com.vendor.vendordataservice.api.dto.ChargeDto;
 import com.vendor.vendordataservice.api.dto.SearchRequest;
 import com.vendor.vendordataservice.api.dto.SearchResponse;
-import com.vendor.vendordataservice.repository.VendorCaseRepository;
-import com.vendor.vendordataservice.repository.model.VendorCaseRow;
-import com.vendor.vendordataservice.service.scoring.MatchScoringStrategy;
+import com.vendor.vendordataservice.repository.mybatis.CaseMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,134 +12,186 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+/**
+ * Unit tests for DefaultSearchService with MyBatis
+ */
 @ExtendWith(MockitoExtension.class)
 class DefaultSearchServiceTest {
 
     @Mock
-    VendorCaseRepository repository;
-
-    @Mock
-    MatchScoringStrategy scoringStrategy;
+    CaseMapper caseMapper;
 
     @InjectMocks
     DefaultSearchService service;
 
     @Test
-    void groupsRowsByPersonAndAppliesScore() {
-        // Arrange repository rows representing same person but 2 cases
-        VendorCaseRow row1 = new VendorCaseRow();
-        row1.setFirstName("John");
-        row1.setMiddleName("Q");
-        row1.setLastName("Public");
-        row1.setSuffix(null);
-        row1.setDob(LocalDate.of(1980, 5, 10));
-        row1.setSex("M");
-        row1.setRace("W");
-        row1.setDlState("FL");
-        row1.setDlNumber("D123");
-        row1.setCounty("Orange");
-        row1.setState("FL");
-        row1.setCaseNumber("C1");
-        row1.setCharge("Speeding");
-        row1.setChargeType("Traffic");
-        row1.setDispositionType("Closed");
+    void searchReturnsMultipleCases() {
+        // Arrange - Mock MyBatis mapper to return case records
+        CaseRecord case1 = CaseRecord.builder()
+                .caseId("C1")
+                .caseNumber("2020-CF-001234")
+                .firstName("John")
+                .middleName("Q")
+                .lastName("Public")
+                .dateOfBirth(LocalDate.of(1980, 5, 10))
+                .sexCode("M")
+                .raceCode("W")
+                .filedDate(LocalDate.of(2020, 5, 15))
+                .countyId(12)
+                .charges(new ArrayList<>())
+                .dockets(new ArrayList<>())
+                .events(new ArrayList<>())
+                .defendants(new ArrayList<>())
+                .build();
 
-        VendorCaseRow row2 = new VendorCaseRow();
-        row2.setFirstName("John");
-        row2.setMiddleName("Q");
-        row2.setLastName("Public");
-        row2.setSuffix(null);
-        row2.setDob(LocalDate.of(1980, 5, 10));
-        row2.setSex("M");
-        row2.setRace("W");
-        row2.setDlState("FL");
-        row2.setDlNumber("D123");
-        row2.setCounty("Seminole");
-        row2.setState("FL");
-        row2.setCaseNumber("C2");
-        row2.setCharge("Failure to yield");
-        row2.setChargeType("Traffic");
-        row2.setDispositionType("Open");
+        CaseRecord case2 = CaseRecord.builder()
+                .caseId("C2")
+                .caseNumber("2021-CF-005678")
+                .firstName("John")
+                .middleName("Q")
+                .lastName("Public")
+                .dateOfBirth(LocalDate.of(1980, 5, 10))
+                .sexCode("M")
+                .raceCode("W")
+                .filedDate(LocalDate.of(2021, 3, 20))
+                .countyId(25)
+                .charges(new ArrayList<>())
+                .dockets(new ArrayList<>())
+                .events(new ArrayList<>())
+                .defendants(new ArrayList<>())
+                .build();
 
-        when(repository.search(any(), any(), any(), any(), any(), anyInt(), anyInt()))
-                .thenReturn(List.of(row1, row2));
+        when(caseMapper.searchCases(any(SearchRequest.class)))
+                .thenReturn(List.of(case1, case2));
 
-        SearchRequest req = new SearchRequest();
-        req.setFirstName("John");
-        req.setLastName("Public");
-        req.setDob(LocalDate.of(1980, 5, 10));
-
-        when(scoringStrategy.score(any(SearchResponse.class), eq(req))).thenReturn(88.0);
+        SearchRequest req = SearchRequest.builder()
+                .nameFirst("John")
+                .nameLast("Public")
+                .dob(LocalDate.of(1980, 5, 10))
+                .page(1)
+                .pageSize(50)
+                .build();
 
         // Act
-        List<SearchResponse> results = service.search(req);
+        SearchResponse response = service.search(req);
 
         // Assert
-        assertThat(results).hasSize(1);
-        SearchResponse person = results.get(0);
-        assertThat(person.getFirstName()).isEqualTo("John");
-        assertThat(person.getCases()).extracting(CaseRecord::getCaseNumber).containsExactlyInAnyOrder("C1", "C2");
-        assertThat(person.getMatchScore()).isEqualTo(88.0);
+        assertThat(response).isNotNull();
+        assertThat(response.getApiVersion()).isEqualTo("v1");
+        assertThat(response.getData()).hasSize(2);
+        assertThat(response.getData()).extracting(CaseRecord::getCaseNumber)
+                .containsExactlyInAnyOrder("2020-CF-001234", "2021-CF-005678");
+        assertThat(response.getPage()).isEqualTo(1);
+        assertThat(response.getPageSize()).isEqualTo(50);
     }
 
     @Test
-    void sortsPeopleByMostRecentFileDateDesc() {
-        // Person A (older)
-        VendorCaseRow a1 = new VendorCaseRow();
-        a1.setFirstName("Alice");
-        a1.setLastName("Alpha");
-        a1.setDob(LocalDate.of(1990, 1, 1));
-        a1.setFileDate(LocalDate.of(2016, 1, 1));
+    void searchWithIncludeChargesFlagFiltersCorrectly() {
+        // Arrange
+        ChargeDto charge = ChargeDto.builder()
+                .chargeSequenceNumber("001")
+                .offenseDate(LocalDate.of(2020, 5, 10))
+                .initialFlStatuteNumber("812.014")
+                .initialFlStatuteDescription("THEFT")
+                .build();
 
-        // Person B (newer)
-        VendorCaseRow b1 = new VendorCaseRow();
-        b1.setFirstName("Bob");
-        b1.setLastName("Beta");
-        b1.setDob(LocalDate.of(1991, 1, 1));
-        b1.setFileDate(LocalDate.of(2020, 5, 1));
+        CaseRecord caseWithCharges = CaseRecord.builder()
+                .caseId("C1")
+                .caseNumber("2020-CF-001234")
+                .firstName("John")
+                .lastName("Smith")
+                .charges(List.of(charge))
+                .dockets(new ArrayList<>())
+                .events(new ArrayList<>())
+                .defendants(new ArrayList<>())
+                .build();
 
-        when(repository.search(any(), any(), any(), any(), any(), anyInt(), anyInt()))
-                .thenReturn(List.of(a1, b1));
+        when(caseMapper.searchCases(any(SearchRequest.class)))
+                .thenReturn(List.of(caseWithCharges));
 
-        SearchRequest req = new SearchRequest();
-        req.setLastName("*"); // ensures not missing-search-key due to notBlank check
+        SearchRequest req = SearchRequest.builder()
+                .nameLast("Smith")
+                .includeCharges(false) // Don't include charges
+                .page(1)
+                .pageSize(50)
+                .build();
 
-        when(scoringStrategy.score(any(SearchResponse.class), eq(req))).thenReturn(50.0);
+        // Act
+        SearchResponse response = service.search(req);
 
-        List<SearchResponse> results = service.search(req);
-        assertThat(results).hasSize(2);
-        assertThat(results.get(0).getFirstName()).isEqualTo("Bob"); // newer first
-        assertThat(results.get(1).getFirstName()).isEqualTo("Alice");
+        // Assert
+        assertThat(response.getData()).hasSize(1);
+        assertThat(response.getData().get(0).getCharges()).isNull(); // Filtered out
     }
 
     @Test
     void validateMissingSearchKeyThrows() {
-        SearchRequest req = new SearchRequest();
+        SearchRequest req = SearchRequest.builder().build();
         assertThrows(RuntimeException.class, () -> service.search(req));
     }
 
     @Test
     void validateInvalidPaginationThrows() {
-        SearchRequest req = new SearchRequest();
-        req.setFirstName("John");
-        req.setPage(0); // invalid
+        SearchRequest req = SearchRequest.builder()
+                .nameFirst("John")
+                .page(0) // invalid
+                .build();
         assertThrows(RuntimeException.class, () -> service.search(req));
     }
 
     @Test
     void validatePageSizeTooLargeThrows() {
-        SearchRequest req = new SearchRequest();
-        req.setFirstName("John");
-        req.setPageSize(100); // invalid > 50
+        SearchRequest req = SearchRequest.builder()
+                .nameFirst("John")
+                .pageSize(600) // invalid > 500
+                .build();
         assertThrows(RuntimeException.class, () -> service.search(req));
+    }
+
+    @Test
+    void searchWithAllIncludeFlagsTrue() {
+        // Arrange
+        CaseRecord caseRecord = CaseRecord.builder()
+                .caseId("C1")
+                .caseNumber("2020-CF-001234")
+                .firstName("John")
+                .lastName("Smith")
+                .charges(List.of(ChargeDto.builder().chargeSequenceNumber("001").build()))
+                .dockets(new ArrayList<>())
+                .events(new ArrayList<>())
+                .defendants(new ArrayList<>())
+                .build();
+
+        when(caseMapper.searchCases(any(SearchRequest.class)))
+                .thenReturn(List.of(caseRecord));
+
+        SearchRequest req = SearchRequest.builder()
+                .nameLast("Smith")
+                .includeCharges(true)
+                .includeDockets(true)
+                .includeEvents(true)
+                .includeDefendants(true)
+                .page(1)
+                .pageSize(50)
+                .build();
+
+        // Act
+        SearchResponse response = service.search(req);
+
+        // Assert
+        assertThat(response.getData()).hasSize(1);
+        CaseRecord result = response.getData().get(0);
+        assertThat(result.getCharges()).isNotNull();
+        assertThat(result.getDockets()).isNotNull();
+        assertThat(result.getEvents()).isNotNull();
+        assertThat(result.getDefendants()).isNotNull();
     }
 }

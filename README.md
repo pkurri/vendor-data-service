@@ -1,24 +1,95 @@
 # Vendor Data Service
 
-Spring Boot 3 (Java 17) service that exposes an external-facing Search API to query vendor data by SSN last 4, DoB, and name. Secured using JWT bearer tokens compatible with `vendor-auth-service`.
+**Version**: 1.0.0  
+**Status**: ✅ Ready for Testing
 
-## Tech
-- Spring Boot 3.3, Java 17, Gradle
-- JWT Resource Server (OAuth2)
-- OpenAPI/Swagger UI
-- Actuator liveness/readiness
-- Docker + K8s (OpenShift and Azure AKS)
+Spring Boot 3 (Java 17) service providing a comprehensive court case data search API with complete JSON schema implementation. Secured using JWT bearer tokens from `vendor-auth-service`.
 
-## Endpoints
-- `GET /api/v1/search` (query params)
-- `POST /api/v1/search` (JSON body)
-- Swagger UI: `/swagger-ui/index.html`
-- OpenAPI: `/v3/api-docs` or `src/main/resources/openapi/vendor-data-service.yaml`
+## 🎯 Features
 
-## Security
-- JWT issuer and JWK set URI configurable via env:
-  - `JWT_ISSUER_URI`
-  - `JWT_JWK_SET_URI`
+- **Complete JSON Schema Implementation** - All fields from court case data specification
+- **Nested Object Support** - Charges, Sentences, Dockets, Events, Defendants
+- **JWT Authentication** - OAuth2 Resource Server with scope-based authorization
+- **Flexible Search** - Name, DOB, SSN, date ranges, counties, case types
+- **Conditional Loading** - Include flags for nested objects
+- **Pagination** - Up to 500 records per page
+- **Rate Limiting** - Per-request throttling
+- **Idempotency** - X-Request-Id header support
+- **API Documentation** - Complete OpenAPI/Swagger UI
+
+## 🏗️ Tech Stack
+
+- **Spring Boot** 3.3.3
+- **Java** 17
+- **Gradle** 8.9
+- **JWT** OAuth2 Resource Server
+- **Database** SQL Server
+- **JSON Schema Validation** networknt/json-schema-validator
+- **OpenAPI** springdoc-openapi 2.6.0
+- **Docker** + Kubernetes support
+
+## 📋 Quick Start
+
+See **[QUICK_START.md](QUICK_START.md)** for detailed setup instructions.
+
+### Prerequisites
+- Java 17+
+- SQL Server
+- Access to vendor-auth-service for JWT tokens
+
+### Setup
+1. Run database schema: `docs/sql/comprehensive_schema.sql`
+2. Configure environment variables (see below)
+3. Build: `.\gradlew.bat clean build`
+4. Run: `.\gradlew.bat bootRun`
+
+## 🔐 Security
+
+JWT authentication required for all endpoints (except health/swagger).
+
+### Environment Variables
+```properties
+JWT_ISSUER_URI=https://your-auth-service.com
+JWT_JWK_SET_URI=https://your-auth-service.com/.well-known/jwks.json
+APP_JWT_AUDIENCE=vendor-data-api
+```
+
+### Required Scope
+- `vendor.search` - Access to search endpoints
+
+## 🌐 API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/search` | Search with query parameters |
+| POST | `/api/v1/search` | Search with JSON body |
+| GET | `/actuator/health` | Health check |
+| GET | `/swagger-ui/index.html` | API documentation |
+| GET | `/v3/api-docs` | OpenAPI specification |
+
+## 📊 Data Model
+
+### Response Envelope
+```json
+{
+  "api_version": "v1",
+  "client_request_id": "req-123",
+  "generated_at": "2025-09-29T22:00:00Z",
+  "page": 1,
+  "page_size": 100,
+  "total_records_is_estimate": true,
+  "warnings": [],
+  "data": [...]
+}
+```
+
+### Case Record Structure
+- **Case Information** - 40+ fields including case number, UCN, court type, dates
+- **Charges** - Statute numbers, descriptions, levels, degrees
+- **Sentences** - Imposed dates, codes, confinement details
+- **Dockets** - Action dates, codes, text (up to 8000 chars)
+- **Events** - Court appearances, judges, locations
+- **Defendants** - Party information, demographics, aliases
 
 ## Quickstart (local)
 1. Ensure Java 17 is installed.

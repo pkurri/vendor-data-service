@@ -3,8 +3,14 @@ package com.vendor.vendordataservice.service;
 import com.vendor.vendordataservice.api.dto.SearchRequest;
 import com.vendor.vendordataservice.api.dto.SearchResponse;
 
-import java.util.List;
-
+/**
+ * Service interface for court case data search
+ */
 public interface SearchService {
-    List<SearchResponse> search(SearchRequest request);
+    /**
+     * Search for court case records based on request criteria
+     * @param request Search criteria
+     * @return Complete API response envelope with case data
+     */
+    SearchResponse search(SearchRequest request);
 }
