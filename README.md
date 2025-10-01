@@ -3,7 +3,18 @@
 **Version**: 1.0.0  
 **Status**: ✅ Ready for Testing
 
-Spring Boot 3 (Java 17) service providing a comprehensive court case data search API with complete JSON schema implementation. Secured using JWT bearer tokens from `vendor-auth-service`.
+Spring Boot 3 (Java 17) service providing a comprehensive court case data search API with complete JSON schema implementation. Secured using JWT bearer tokens with OAuth2 M2M (Machine-to-Machine) authentication.
+
+> 📚 **[View Complete Documentation Index](DOCUMENTATION_INDEX.md)** - Navigate all project documentation
+
+## 📦 M2M Client Libraries
+
+Pre-built client libraries are available for easy integration:
+
+- **Java Client**: `client/java/` - Full-featured Java client with OAuth2 support
+- **TypeScript/Node.js Client**: `client/typescript/` - Modern async/await API for Node.js
+
+See the respective README files in each client directory for installation and usage instructions.
 
 ## 🎯 Features
 

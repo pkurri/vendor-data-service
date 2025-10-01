@@ -18,8 +18,9 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: ${JWT_ISSUER_URI:http://localhost:8080/realms/example}
-          # or set jwk-set-uri via env: JWT_JWK_SET_URI
+          # Vendor Auth Server (M2M OAuth2 Authorization Server)
+          issuer-uri: ${JWT_ISSUER_URI:http://localhost:9000}
+          # or set jwk-set-uri directly: http://localhost:9000/oauth2/jwks
           jwk-set-uri: ${JWT_JWK_SET_URI:}
 
 # MyBatis Configuration
